@@ -58,7 +58,8 @@ function App() {
     setIsLoading(true);
     try {
       const contract = await getContract();
-      await contract.likeTweet(author, id);
+      const tx = await contract.likeTweet(author, id);
+      await tx.wait();
       await fetchTweets()
       setIsLoading(false)
       alert("Like thành công");
