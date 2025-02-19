@@ -1,10 +1,12 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { useEffect, useState } from 'react';
+import {  useState } from 'react';
 import contractABI from "./abi/abi.json";
 
 import {
+  type BaseError,
   useAccount,
-  useConnect,
+  useReadContract,
+  useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi";
 import Loading from './components/Loading/Loading';
@@ -139,21 +141,31 @@ export interface Tweet {
 // export default App
 
 const App = () => {
-  const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS
-  const { writeContract, isPending, data } = useWriteContract()
+  const abi = contractABI as const
   const { address, isConnected } = useAccount();
-  const [tweet, setTweet] = useState("");
-  console.log('data', data);
+  const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS
+  const { writeContract, isPending, data:txHash } = useWriteContract()
+  const { isFetching } = useWaitForTransactionReceipt({
+    hash: txHash,
+  })
+  const { data: listTweet, isLoading:isLoadingListTweet } = useReadContract({
+    address: contractAddress,
+    abi: abi,
+    functionName: 'getAllTweets',
+    args: [address]
+  })
+
   
-  const [listTweet, setListTweet] = useState<Tweet[]>([]);
+  const [tweet, setTweet] = useState("");
+  
 
   const handleCreateTweet = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (tweet !== '') {
       writeContract({
         address: contractAddress,
-        abi: contractABI,
-        functionName: "createTweet",
+        abi: abi,
+        functionName: "",
         args: [tweet],
       })
     } else {
@@ -184,7 +196,7 @@ const App = () => {
             </form>
             <br />
             <div>
-            {listTweet.map((tweets) => {
+            {/* {listTweet.map((tweets) => {
               return (
                 <div key={tweets.id} className='p-2 my-2 bg-gray-300 rounded-sm'>
                   <div>{tweets.author}</div>
@@ -195,11 +207,11 @@ const App = () => {
                   </div>
                 </div>
               )
-            })}
+            })} */}
             </div>
           </div>)}
       </div>
-      <Loading isLoading={isPending}/>
+      <Loading isLoading={isPending || isFetching}/>
     </div>
   );
 }

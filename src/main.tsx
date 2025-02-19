@@ -24,7 +24,14 @@ const config = getDefaultConfig({
   ssr: false, 
 });
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+      queries: {
+          refetchOnWindowFocus: false,
+          retry: 0,
+      },
+  },
+});
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
