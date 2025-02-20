@@ -2,6 +2,7 @@ import { useRoutes } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout/MainLayout';
 import Home from './pages/Home/Home';
 import TweetPage from './pages/TweetPage/TweetPage';
+import TweetEthers from './pages/TweetPageEthers/TweetPageEthers';
 
 const useRouterElements = () => {
     const routeElements = useRoutes([
@@ -19,6 +20,10 @@ const useRouterElements = () => {
                 }
             ]
         },
+        {
+            path: '/tweetEthers',
+            element: <TweetEthers />,
+        }
     ]);
     return routeElements;
 };
