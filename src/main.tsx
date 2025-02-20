@@ -16,6 +16,7 @@ import {
   QueryClient,
 } from "@tanstack/react-query";
 import App from './App';
+import { BrowserRouter } from 'react-router-dom';
 
 const config = getDefaultConfig({
   appName: 'My RainbowKit App',
@@ -35,17 +36,19 @@ const queryClient = new QueryClient({
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider theme={lightTheme({
-          accentColor: "#623485", 
-          accentColorForeground: "white",
-          borderRadius: "large",
-          fontStack: "system",
-        })}>
-          <App />
-        </RainbowKitProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
+    <BrowserRouter>
+      <WagmiProvider config={config}>
+        <QueryClientProvider client={queryClient}>
+          <RainbowKitProvider theme={lightTheme({
+            accentColor: "#623485", 
+            accentColorForeground: "white",
+            borderRadius: "large",
+            fontStack: "system",
+          })}>
+            <App />
+          </RainbowKitProvider>
+        </QueryClientProvider>
+      </WagmiProvider>
+    </BrowserRouter>
   </StrictMode>,
 )

@@ -1,24 +1,4 @@
-import { ConnectButton } from '@rainbow-me/rainbowkit';
-import {  useState } from 'react';
-import contractABI from "./abi/abi.json";
-
-import {
-  type BaseError,
-  useAccount,
-  useReadContract,
-  useWaitForTransactionReceipt,
-  useWriteContract,
-} from "wagmi";
-import Loading from './components/Loading/Loading';
-
-export interface Tweet {
-  id: bigint;
-  author: string;
-  content: string;
-  timestamp: bigint;
-  likes: bigint;
-}
-
+import useRouterElements from './useRouterElements';
 
 // export const getContract = async (): Promise<Contract> => {
 //   if (!window.ethereum) throw new Error("Metamask chưa được cài đặt");
@@ -141,77 +121,11 @@ export interface Tweet {
 // export default App
 
 const App = () => {
-  const abi = contractABI as const
-  const { address, isConnected } = useAccount();
-  const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS
-  const { writeContract, isPending, data:txHash } = useWriteContract()
-  const { isFetching } = useWaitForTransactionReceipt({
-    hash: txHash,
-  })
-  const { data: listTweet, isLoading:isLoadingListTweet } = useReadContract({
-    address: contractAddress,
-    abi: abi,
-    functionName: 'getAllTweets',
-    args: [address]
-  })
-
-  
-  const [tweet, setTweet] = useState("");
-  
-
-  const handleCreateTweet = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    if (tweet !== '') {
-      writeContract({
-        address: contractAddress,
-        abi: abi,
-        functionName: "",
-        args: [tweet],
-      })
-    } else {
-      alert("Vui lòng nhập content");
-    }
-  }
+  const routeElements = useRouterElements();
 
   return (
-    <div className="h-screen bg-black text-white p-4">
-      <div className={`bg-white overflow-auto h-full text-black p-4 rounded min-w-[1200px] min-h-[200px] flex items-center flex-col ${!address && 'justify-center '}`}>
-        <div>
-          <ConnectButton  showBalance={false}/>
-        </div>
-        {isConnected && (
-          <div>
-            <div className='mt-4'>Connected: {address}</div>
-            <br />
-            <form onSubmit={handleCreateTweet}>
-              <textarea
-                value={tweet}
-                onChange={e => setTweet(e.target.value)}
-                className='block w-full border border-gray-400 p-2 outline-none rounded-sm'
-                rows={4}
-                placeholder="What's happening?"
-              ></textarea>
-              <br />
-              <button id="tweetSubmitBtn" type="submit" className='p-2 bg-blue-400 rounded-3xl text-black'>Create Tweet</button>
-            </form>
-            <br />
-            <div>
-            {/* {listTweet.map((tweets) => {
-              return (
-                <div key={tweets.id} className='p-2 my-2 bg-gray-300 rounded-sm'>
-                  <div>{tweets.author}</div>
-                  <div>content: {tweets.content}</div>
-                  <div>
-                    {/* <button onClick={() => handleLikeTweet(tweets.author, tweets.id)} className='mr-2'>Like</button> */}
-                    <span>{tweets.likes}</span>
-                  </div>
-                </div>
-              )
-            })} */}
-            </div>
-          </div>)}
-      </div>
-      <Loading isLoading={isPending || isFetching}/>
+    <div>
+      {routeElements}
     </div>
   );
 }
