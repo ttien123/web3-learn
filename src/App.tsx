@@ -1,6 +1,5 @@
+import Loading from './components/Loading/Loading';
 import useRouterElements from './useRouterElements';
-
-
 
 const App = () => {
   const routeElements = useRouterElements();
@@ -8,6 +7,7 @@ const App = () => {
   return (
     <div>
       {routeElements}
+      <Loading />
     </div>
   );
 }

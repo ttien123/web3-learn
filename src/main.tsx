@@ -18,11 +18,12 @@ import {
 import App from './App';
 import { BrowserRouter } from 'react-router-dom';
 
-const config = getDefaultConfig({
+export const config = getDefaultConfig({
   appName: 'My RainbowKit App',
   projectId: 'YOUR_PROJECT_ID',
   chains: [sepolia],
   ssr: false, 
+  
 });
 
 const queryClient = new QueryClient({

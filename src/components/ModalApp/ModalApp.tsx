@@ -12,7 +12,7 @@ const ModalApp = ({ children, renderPopover, initialOpen }: Props) => {
     return (
         <Dialog defaultOpen={initialOpen} open={open} onOpenChange={(isOpen) => setOpen(isOpen)}>
             <DialogTrigger asChild>{children}</DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">{renderPopover}</DialogContent>
+            <DialogContent  className="sm:max-w-[425px]">{renderPopover}</DialogContent>
         </Dialog>
     );
 };

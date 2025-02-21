@@ -5,18 +5,18 @@ import { handleConvertToToken } from '../../utils/convertNumber';
 import useStateSignContract from '@/store/loadingSignContract';
 import ModalApp from '@/components/ModalApp/ModalApp';
 import MintForm from './components/MintForm/MintForm';
+import BuyTokenForm from './components/BuyTokenForm/BuyTokenForm';
 
 // const adminAdress = "0x7d4852e8aB93E0d983eA33a9d5cc7B3eC762A088"
 const contractAddress = import.meta.env.VITE_CONTRACT_MYTOKEN_ADDRESS;
 const Home = () => {
     const { setIsLoadingSignContract } = useStateSignContract();
-
     const { address, isConnected } = useAccount();
-    const { data: totalETH, isLoading: isLoadingETH } = useBalance({
+    const { data: totalETH, isLoading: isLoadingETH, queryKey: queryKeyETH } = useBalance({
         address,
     });
 
-    const { data: balanceToken, isLoading: isGetBalance } = useReadContract({
+    const { data: balanceToken, isLoading: isGetBalance, queryKey: queryKeyToken } = useReadContract({
         abi: contractMyTokenABI,
         address: contractAddress,
         functionName: 'balanceOf',
@@ -45,26 +45,33 @@ const Home = () => {
                 </div>
             )}
             <div className="flex flex-col mb-8">
-                <ModalApp renderPopover={<MintForm />}>
+                <ModalApp renderPopover={isConnected ? 
+                    <MintForm queryKeyETH={queryKeyETH} queryKeyToken={queryKeyToken} /> : 
+                     <div className="flex items-center justify-center gap-4 flex-col">
+                        <div className="text-black text-center font-medium">Please connect wallet</div>
+                    </div>}>
                     <button
-                        // onClick={mintFreeTokens}
                         className="bg-gray-900 text-white hover:bg-gray-800 rounded-full px-12 py-2 sm:w-auto"
                         // disabled={isMintLoading}
                     >
                         Mint Tokens
                     </button>
                 </ModalApp>
-
-                {/* {txSuccess && <p>Success</p>} */}
             </div>
 
             <div className="flex flex-col mb-8">
-                <button
-                    // onClick={buySomeTokens}
-                    className="bg-gray-900 text-white hover:bg-gray-800 rounded-full px-12 py-2 sm:w-auto"
-                >
-                    Buy Tokens
-                </button>
+                <ModalApp renderPopover={isConnected ? 
+                    <BuyTokenForm queryKeyETH={queryKeyETH} queryKeyToken={queryKeyToken} /> : 
+                    <div className="flex items-center justify-center gap-4 flex-col">
+                        <div className="text-black text-center font-medium">Please connect wallet</div>
+                    </div>}>
+                    <button
+                        className="bg-gray-900 text-white hover:bg-gray-800 rounded-full px-12 py-2 sm:w-auto"
+                    >
+                        Buy Tokens
+                    </button>
+                </ModalApp>
+                
             </div>
 
             <div className="flex flex-col mb-4">
