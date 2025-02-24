@@ -1,9 +1,9 @@
 import { Button } from '@/components/ui/button';
 import { contractAddress } from '@/config/config';
 import React, { useEffect, useState } from 'react';
-import {  useWaitForTransactionReceipt, useWriteContract, } from 'wagmi';
+import {  useSimulateContract, useWaitForTransactionReceipt, useWriteContract, } from 'wagmi';
 import contractMyTokenABI from '@/abi/myTokenAbi.json';
-import { parseEther } from 'viem';
+import { BaseError, ContractFunctionExecutionError, ContractFunctionExecutionErrorType, parseEther, SimulateContractErrorType } from 'viem';
 import useStateSignContract from '@/store/loadingSignContract';
 import ModalApp  from '@/components/ModalApp/ModalApp';
 import ModalStep, { MODAL_STEP } from '@/components/ModalStep/ModalStep';
@@ -19,11 +19,14 @@ function BuyTokenForm({queryKeyETH, queryKeyToken}: Props) {
     const [isError, setIsError] = useState<boolean>(false);
     const [stepModal, setStepModal] = useState<MODAL_STEP>(MODAL_STEP.READY);
     const [amount, setAmount] = useState<string>('');
+    const [errorMessage, setErrorMessage] = useState<string>('');
     const { setIsLoadingSignContract } = useStateSignContract();
     const { writeContract, isPending, data: txHash } = useWriteContract();
     const { isFetching, status: statusWaitTx } = useWaitForTransactionReceipt({
         hash: txHash,
     });
+
+
 
     
     const handleBuyToken = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -32,21 +35,32 @@ function BuyTokenForm({queryKeyETH, queryKeyToken}: Props) {
             setIsError(true);
             return;
         }
-        const ethAmount = parseEther((Number(amount) * 0.001).toString());
-        writeContract({
-            address: contractAddress.MyTokenAddress,
-            abi: contractMyTokenABI,
-            functionName: 'buy',
-            args: [amount],
-            value: ethAmount,
-        },
-        {
-            onError() {
-                setStepModal(MODAL_STEP.FAILED);
-            },
+        try {
+            const ethAmount = parseEther((Number(amount) * 0.001).toString());
+            const {request} = await simulateContract(config, {
+                address: contractAddress.MyTokenAddress,
+                abi: contractMyTokenABI,
+                functionName: 'buy',
+                args: [amount],
+                value: ethAmount,
+            })
+            writeContract(request,
+            {
+                onError() {
+                    setStepModal(MODAL_STEP.FAILED);
+                },
+                onSuccess() {
+                    setStepModal(MODAL_STEP.SUCCESS);
+                },
+            }
+            );
+        } catch (error: any) {
+            const nameError = ((error as BaseError)?.cause as any)?.cause?.name
+            if (nameError === 'InsufficientFundsError') {
+                setErrorMessage("You don't have enough ETH to buy token");
+            }
+            setStepModal(MODAL_STEP.FAILED);
         }
-        );
-       
         setIsError(false);
     };
 
@@ -69,7 +83,7 @@ function BuyTokenForm({queryKeyETH, queryKeyToken}: Props) {
 
     return (
         <div>
-          <ModalStep open={stepModal !== MODAL_STEP.READY} setOpen={setStepModal} statusStep={stepModal}/>
+          <ModalStep open={stepModal !== MODAL_STEP.READY} setOpen={setStepModal} contentStep={errorMessage} statusStep={stepModal}/>
           <ModalApp renderPopover/>
           <form onSubmit={handleBuyToken} style={{ margin: '20px 0' }}>
               <h3 className="text-xl mb-4 font-semibold">Buy Token</h3>

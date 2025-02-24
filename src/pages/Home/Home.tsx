@@ -1,4 +1,4 @@
-import { useAccount, useBalance, useReadContract } from 'wagmi';
+import { useAccount, useBalance, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import contractMyTokenABI from '../../abi/myTokenAbi.json';
 import { useEffect } from 'react';
 import { handleConvertToToken } from '../../utils/convertNumber';
@@ -6,14 +6,22 @@ import useStateSignContract from '@/store/loadingSignContract';
 import ModalApp from '@/components/ModalApp/ModalApp';
 import MintForm from './components/MintForm/MintForm';
 import BuyTokenForm from './components/BuyTokenForm/BuyTokenForm';
+import { useQueryClient } from '@tanstack/react-query';
+import { simulateContract } from '@wagmi/core'
+import { config } from '@/main';
 
 // const adminAdress = "0x7d4852e8aB93E0d983eA33a9d5cc7B3eC762A088"
 const contractAddress = import.meta.env.VITE_CONTRACT_MYTOKEN_ADDRESS;
 const Home = () => {
+    const queryClient = useQueryClient();
+
     const { setIsLoadingSignContract } = useStateSignContract();
     const { address, isConnected } = useAccount();
     const { data: totalETH, isLoading: isLoadingETH, queryKey: queryKeyETH } = useBalance({
         address,
+        query: {
+            enabled: isConnected,
+        }
     });
 
     const { data: balanceToken, isLoading: isGetBalance, queryKey: queryKeyToken } = useReadContract({
@@ -25,10 +33,44 @@ const Home = () => {
             enabled: isConnected,
         },
     });
+    const { data:test } = useReadContract({
+        abi: contractMyTokenABI,
+        address: contractAddress,
+        functionName: 'name',
+        
+    });
+    console.log('test', test);
+    
+    const { writeContract, isPending, data: txHash } = useWriteContract();
+    const { isFetching, status: statusWaitTx } = useWaitForTransactionReceipt({
+            hash: txHash,
+        });
+
+    const handleWithdraw = async () => {
+        try {
+            const {request} = await simulateContract(config, {
+                address: contractAddress,
+                abi: contractMyTokenABI,
+                functionName: 'withdraw',
+                args: []
+            })
+            writeContract(request);
+        } catch (error: any) {
+            console.log({error});
+            
+        }
+       
+    }
 
     useEffect(() => {
-        setIsLoadingSignContract(isLoadingETH || isGetBalance);
-    }, [isLoadingETH, isGetBalance, setIsLoadingSignContract]);
+        setIsLoadingSignContract(isLoadingETH || isGetBalance || isFetching);
+    }, [isLoadingETH, isGetBalance, setIsLoadingSignContract, isFetching]);
+
+    useEffect(() => {
+            if (statusWaitTx === 'success') {
+                queryClient.invalidateQueries({ queryKey: queryKeyETH });
+            }
+        }, [statusWaitTx]);
 
     return (
         <div className="container flex flex-col justify-center mx-auto items-center mt-8">
@@ -84,7 +126,7 @@ const Home = () => {
             </div>
 
             <div className="text-center">
-                <h3 className="text-lg ">Total minted</h3>
+                <button onClick={handleWithdraw} className="text-lg ">Withdraw</button>
 
                 {/* <h3 className="text-lg">{supplyData}</h3> */}
             </div>
