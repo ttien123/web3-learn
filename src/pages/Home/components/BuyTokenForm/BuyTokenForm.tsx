@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { contractAddress } from '@/config/config';
 import React, { useEffect, useState } from 'react';
-import {  useSimulateContract, useWaitForTransactionReceipt, useWriteContract, } from 'wagmi';
+import {   useWaitForTransactionReceipt, useWriteContract, } from 'wagmi';
 import contractMyTokenABI from '@/abi/myTokenAbi.json';
 import { BaseError, ContractFunctionExecutionError, ContractFunctionExecutionErrorType, parseEther, SimulateContractErrorType } from 'viem';
 import useStateSignContract from '@/store/loadingSignContract';
@@ -55,7 +55,8 @@ function BuyTokenForm({queryKeyETH, queryKeyToken}: Props) {
             }
             );
         } catch (error: any) {
-            const nameError = ((error as BaseError)?.cause as any)?.cause?.name
+            console.log({error});
+            const nameError = ((error as SimulateContractErrorType)?.cause as any)?.cause?.name
             if (nameError === 'InsufficientFundsError') {
                 setErrorMessage("You don't have enough ETH to buy token");
             }

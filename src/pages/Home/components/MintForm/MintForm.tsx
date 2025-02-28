@@ -8,6 +8,8 @@ import useStateSignContract from '@/store/loadingSignContract';
 import ModalApp  from '@/components/ModalApp/ModalApp';
 import ModalStep, { MODAL_STEP } from '@/components/ModalStep/ModalStep';
 import { useQueryClient } from '@tanstack/react-query';
+import { config } from '@/main';
+import { simulateContract } from '@wagmi/core'
 
 interface Props {
     queryKeyETH: any;
@@ -32,18 +34,20 @@ function MintForm({queryKeyETH, queryKeyToken}: Props) {
             return;
         }
         const mintAmount = ethers.parseUnits(amount, 18);
-        writeContract({
-            address: contractAddress.MyTokenAddress,
-            abi: contractMyTokenABI,
-            functionName: 'mint',
-            args: [to, mintAmount],
-            },
-            {
-                onError() {
-                setStepModal(MODAL_STEP.FAILED);
-                },
-            }
-        );
+
+        try {
+            const {request} = await simulateContract(config, {
+                address: contractAddress.MyTokenAddress,
+                abi: contractMyTokenABI,
+                functionName: 'mint',
+                args: [to, mintAmount],
+                })
+            writeContract(request);
+        } catch (error) {
+            console.log({ error });
+            
+        }
+        
         setIsError(false);
     };
 

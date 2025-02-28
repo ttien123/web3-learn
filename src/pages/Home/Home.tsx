@@ -33,15 +33,8 @@ const Home = () => {
             enabled: isConnected,
         },
     });
-    const { data:test } = useReadContract({
-        abi: contractMyTokenABI,
-        address: contractAddress,
-        functionName: 'name',
-        
-    });
-    console.log('test', test);
     
-    const { writeContract, isPending, data: txHash } = useWriteContract();
+    const { writeContractAsync, isPending, data: txHash } = useWriteContract();
     const { isFetching, status: statusWaitTx } = useWaitForTransactionReceipt({
             hash: txHash,
         });
@@ -54,12 +47,11 @@ const Home = () => {
                 functionName: 'withdraw',
                 args: []
             })
-            writeContract(request);
+            writeContractAsync(request);
         } catch (error: any) {
             console.log({error});
             
         }
-       
     }
 
     useEffect(() => {
@@ -126,7 +118,7 @@ const Home = () => {
             </div>
 
             <div className="text-center">
-                <button onClick={handleWithdraw} className="text-lg ">Withdraw</button>
+                <button onClick={handleWithdraw} className="text-lg bg-gray-900 text-white hover:bg-gray-800 rounded-full px-12 py-2 sm:w-auto">Withdraw</button>
 
                 {/* <h3 className="text-lg">{supplyData}</h3> */}
             </div>
