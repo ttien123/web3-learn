@@ -4,6 +4,7 @@ import { BaseError, useAccount } from "wagmi";
 import { useEffect, useState } from "react";
 import { Tweet } from "../TweetPage/TweetPage";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+
 export const getContract = async (): Promise<Contract> => {
   if (!window.ethereum) throw new Error("Metamask chưa được cài đặt");
   const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS
@@ -32,7 +33,7 @@ function TweetEthers() {
         setIsLoading(false)
         alert("Tweet đã được tạo!");
       } catch (error) {
-        console.log((error as BaseError)?.shortMessage);
+        console.log({error});
         setIsLoading(false);
       }
     } else {
@@ -81,11 +82,7 @@ function TweetEthers() {
   }, [address]);
   
   return (
-    <div className="h-screen bg-black text-white p-4">
-      <div className={`bg-white overflow-auto h-full text-black p-4 rounded min-w-[1200px] min-h-[200px] flex items-center flex-col ${!address && 'justify-center '}`}>
-        <div>
-          <ConnectButton  showBalance={false}/>
-        </div>
+      <div >
         {address && (
           <div>
             <div className='mt-4'>Connected: {address}</div>
@@ -116,7 +113,6 @@ function TweetEthers() {
             })}
             </div>
           </div>)}
-      </div>
     </div>
   )
 }

@@ -1,11 +1,14 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
+import { useAccount, useBalance, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import contractABI from '../../abi/abi.json';
 import Loading from '../../components/Loading/Loading';
 import { Abi } from 'viem';
 import type { Config } from 'wagmi';
-
+import { simulateContract } from '@wagmi/core'
+import { config } from '@/main';
+import { usePublicClient } from 'wagmi';
+import { ethers, toBigInt } from 'ethers';
 export interface Tweet {
     id: bigint;
     author: string;
@@ -15,13 +18,23 @@ export interface Tweet {
 }
 
 const TweetPage = () => {
+    const publicClient = usePublicClient({
+        config
+    });
+
+    
     const { address, isConnected } = useAccount();
+    
+    const {data: balance} = useBalance({
+        address
+    })
+    console.log('balance', balance);
     const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS;
     const [tweet, setTweet] = useState('');
     const [listTweet, setListTweet] = useState<Tweet[]>([]);
     const queryClient = useQueryClient();
-    const { writeContract, isPending, data: txHash, error } = useWriteContract();
-    const { isFetching, isFetched } = useWaitForTransactionReceipt({
+    const { writeContract, writeContractAsync, data: txHash } = useWriteContract();
+    const {isFetched } = useWaitForTransactionReceipt({
         hash: txHash,
     });
     const {
@@ -34,17 +47,43 @@ const TweetPage = () => {
         functionName: 'getAllTweets',
         args: [address],
     });
-    console.log('error', error);
+    
     
     const handleCreateTweet = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (tweet !== '') {
-            writeContract({
+           try {
+            const gasPrice = (await publicClient?.getGasPrice()) as bigint;
+            const estimatedGas = (await publicClient?.estimateContractGas({
                 address: contractAddress,
                 abi: contractABI as Abi,
-                functionName: 'changeTweetLength',
+                functionName: 'createTweet',
                 args: [tweet],
-            });
+            })) as bigint;
+            const gasCost = estimatedGas * gasPrice;
+
+            const num1 = toBigInt(balance?.value || '0');
+            const num2 = toBigInt(gasCost);
+            console.log('num1', num1, 'num2', num2);
+            
+
+            if (num1 < num2) {
+                alert('You don\'t have enough ETH to create tweet');
+                return;
+            }
+            const { request, result } = await simulateContract(config, {
+                address: contractAddress,
+                abi: contractABI as Abi,
+                functionName: 'createTweet',
+                args: [tweet],
+            })
+
+            console.log('simulateContract', result);
+            
+            await writeContractAsync(request);
+           } catch (error) {
+            console.log({error});
+           }
         } else {
             alert('Vui lòng nhập content');
         }

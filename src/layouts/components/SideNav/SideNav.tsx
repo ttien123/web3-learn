@@ -15,6 +15,10 @@ const SideNav = () => {
             name: 'TweetEthers',
             to: '/tweetEthers',
         },
+        {
+            name: 'Approve',
+            to: '/approve',
+        },
     ];
 
 
